@@ -53,6 +53,14 @@ def sandbox_env(settings: Settings) -> dict:
     }
 
 
+def gvisor(settings: Settings) -> bool:
+    return bool(settings.runtime) and settings.runtime != "runc"
+
+
+def host_pids_limit(settings: Settings) -> int:
+    return settings.limits.pids * 16 if gvisor(settings) else settings.limits.pids
+
+
 def sandbox_spec(settings: Settings) -> dict:
     lim = settings.limits
     return {
@@ -105,7 +113,7 @@ class Sandbox:
             mem_limit=lim.memory,
             memswap_limit=lim.memory,
             nano_cpus=int(lim.cpus * 1e9),
-            pids_limit=lim.pids,
+            pids_limit=host_pids_limit(self.settings),
             cap_drop=["ALL"],
             security_opt=["no-new-privileges"],
             environment=sandbox_env(self.settings),
@@ -113,7 +121,7 @@ class Sandbox:
             init=True,
             labels={"repro.job": self.job_id, "repro.role": self.role},
         )
-        if self.settings.runtime and self.settings.runtime != "runc":
+        if gvisor(self.settings):
             kwargs["runtime"] = self.settings.runtime
             kwargs["ulimits"] = [docker.types.Ulimit(name="nproc", soft=lim.pids, hard=lim.pids)]
         self.container = self.client.containers.run(**kwargs)

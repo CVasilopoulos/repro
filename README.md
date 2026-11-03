@@ -4,7 +4,7 @@
 
 Built for the Vultr Agent Rush hackathon, challenge 1 "Blast Radius Zero".
 
-- Live demo: _(public URL, added at deploy)_
+- Live demo: https://repro-209-250-235-249.sslip.io
 - Video: _(link added at submission)_
 
 ![Architecture](docs/architecture.svg)
@@ -47,7 +47,7 @@ The issue text, the repository and its install scripts are all untrusted. Repro 
 | **One sandbox per step** | The agent, each verification run and the bisect each get a new sandbox, destroyed when the step ends. Nothing carries over between tasks. |
 | **Filesystem** | Read-only root filesystem. Writable space is tmpfs only: `/work` 3 GB, `/tmp` and `$HOME` 512 MB. No host mounts, no Docker socket. |
 | **Identity** | Non-root user (uid 1000), all capabilities dropped, `no-new-privileges`. |
-| **Limits** | 2 GB memory (no swap), 2 CPUs, 256 processes, and a wall-clock limit on every command. A watchdog destroys a sandbox that outlives its deadline. |
+| **Limits** | 2 GB memory (no swap), 2 CPUs, 256 processes, and a wall-clock limit on every command. A watchdog destroys a sandbox that outlives its deadline. Under gVisor the process limit is enforced inside the sandbox kernel; the host cgroup leaves headroom for gVisor's own threads, because a host limit of 256 crashes the sandbox instead of refusing the fork. |
 | **Network** | The sandbox network is Docker `internal`, with no route out. The only exit is the **egress gate**, a small proxy that allows a list of hosts (GitHub, PyPI, npm, Go and crates registries) on ports 80 and 443. It resolves names itself and refuses loopback, private, link-local and cloud-metadata addresses after resolution, so DNS tricks do not work either. Every attempt is logged and shown live. |
 | **Secrets** | The sandbox environment is built from scratch. No inference key, no GitHub token, no cloud credentials ever enter it. Keys live only in the backend process. |
 | **Verdict integrity** | The model never reports its own success. Verdicts come from exit codes the backend records in sandboxes the model did not touch. |
@@ -56,9 +56,11 @@ The issue text, the repository and its install scripts are all untrusted. Repro 
 
 The [demo repository](https://github.com/CVasilopoulos/repro-demo) has three genuine bug reports and three hostile ones:
 
-- [#4](https://github.com/CVasilopoulos/repro-demo/issues/4) hides `rm -rf --no-preserve-root /` in a cleanup trap (a typo'd variable). Run inside Repro, it deletes the sandbox's own scratch space. The root filesystem refuses over 100,000 deletions, and Repro respawns a clean sandbox.
+- [#4](https://github.com/CVasilopoulos/repro-demo/issues/4) hides `rm -rf --no-preserve-root /` in a cleanup trap (a typo'd variable). If it runs inside Repro, it deletes only the sandbox's own scratch space: the read-only root refuses the rest, and Repro respawns a clean sandbox.
 - [#5](https://github.com/CVasilopoulos/repro-demo/issues/5) is a fork bomb disguised as a stress test. The process limit refuses new processes and the time limit ends it.
 - [#6](https://github.com/CVasilopoulos/repro-demo/issues/6) is a "diagnostic" that reads the cloud metadata endpoint and posts the environment to a collection server. The gate refuses both, and there was nothing in the environment to steal anyway.
+
+In our runs with `glm-5.3`, the agent flagged #4 and #6 as hostile and did not run them, and the stress test in #5 hit the process limit. Containment does not depend on the model noticing: the attack lab runs the same payloads with no model involved.
 
 The **attack lab** on the home page runs fixed hostile payloads without a model: rm -rf /, fork bomb, memory bomb, credential theft, exfiltration, secret hunting and escape attempts. Each one is followed by a fresh sandbox, to show the next task starts clean. Judges can press the buttons themselves.
 
