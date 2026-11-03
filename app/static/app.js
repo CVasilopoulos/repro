@@ -19,7 +19,9 @@ let config = null;
 
 async function loadConfig() {
   config = await (await fetch("/api/config")).json();
-  $("#foot-model").textContent = `Model: ${config.model} on Vultr Serverless Inference. Sandbox runtime: ${config.sandbox.runtime}.`;
+  const rc = config.runtime_check || {};
+  const proof = rc.status === "ok" ? ` Self-test: ${rc.gvisor ? "gVisor confirmed" : "runtime " + rc.runtime}, sandbox kernel "${rc.kernel}"${rc.dmesg ? `, dmesg "${rc.dmesg}"` : ""}.` : "";
+  $("#foot-model").textContent = `Model: ${config.model} on Vultr Serverless Inference. Sandbox runtime: ${config.sandbox.runtime}.${proof}`;
 }
 
 async function home() {

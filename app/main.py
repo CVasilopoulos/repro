@@ -23,6 +23,23 @@ store = Store(os.path.join(settings.data_dir, "repro.db"))
 registry = SandboxRegistry()
 runner: JobRunner | None = None
 tasks: set[asyncio.Task] = set()
+runtime_check: dict = {"status": "pending"}
+
+
+async def check_runtime() -> None:
+    from .sandbox import Sandbox
+
+    box = Sandbox(runner.docker, settings, "selftest", "selftest")
+    try:
+        info = await asyncio.to_thread(box.start)
+        result = await asyncio.to_thread(box.exec, "uname -sr; dmesg 2>/dev/null | head -1", 30)
+        lines = result.output.strip().splitlines()
+        runtime_check.update(status="ok", runtime=info.runtime, kernel=lines[0] if lines else "",
+                             dmesg=lines[1] if len(lines) > 1 else "", gvisor="gVisor" in result.output)
+    except Exception as exc:
+        runtime_check.update(status="error", error=str(exc)[:300])
+    finally:
+        await asyncio.to_thread(box.destroy)
 
 
 @asynccontextmanager
@@ -31,6 +48,7 @@ async def lifespan(app: FastAPI):
     store.loop = asyncio.get_running_loop()
     runner = JobRunner(settings, store, registry)
     ledger_task = asyncio.create_task(tail_ledger(settings.gate_ledger, store, registry))
+    asyncio.create_task(check_runtime())
     yield
     ledger_task.cancel()
 
@@ -76,6 +94,7 @@ async def config():
         "model": settings.model,
         "inference": settings.inference_url,
         "sandbox": sandbox_spec(settings),
+        "runtime_check": runtime_check,
         "examples": examples,
         "comment_repos": list(settings.comment_repos),
         "lab": [{"id": k, "title": v["title"], "explain": v["explain"]} for k, v in PRESETS.items()],
