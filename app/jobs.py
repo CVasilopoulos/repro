@@ -260,13 +260,58 @@ class JobRunner:
             self._verify(job_id, issue, issue.default_branch, "default", sub, emit),
         )
         verdict, why = decide(runs[0], runs[1])
-        emit("verdict", verdict=verdict, title=VERDICTS[verdict], why=why,
+        culprit = {}
+        if verdict in ("fixed", "new_on_default") and runs[0].commit and runs[1].commit:
+            emit("status", message="Bisecting to the commit that changed the behaviour")
+            culprit = await self._bisect(job_id, issue, runs[0].commit, runs[1].commit, verdict, sub, emit)
+            if culprit.get("commit"):
+                why += f"; first {'fixed' if verdict == 'fixed' else 'broken'} commit {culprit['commit'][:12]} ({culprit.get('subject', '')})"
+        emit("verdict", verdict=verdict, title=VERDICTS[verdict], why=why, culprit=culprit,
              reported={"ref": runs[0].ref, "commit": runs[0].commit, "outcome": runs[0].outcome,
                        "setup_exit": runs[0].setup_exit, "repro_exits": runs[0].repro_exits},
              default={"ref": runs[1].ref, "commit": runs[1].commit, "outcome": runs[1].outcome,
                       "setup_exit": runs[1].setup_exit, "repro_exits": runs[1].repro_exits})
         self.store.update_job(job_id, status="done", verdict=verdict, finished=time.time(),
                               summary=f"{VERDICTS[verdict]}: {sub.get('claim', '')}"[:500])
+
+    async def _bisect(self, job_id: str, issue: Issue, reported: str, default: str, verdict: str, sub: dict,
+                      emit) -> dict:
+        box = await self._start_sandbox(job_id, "bisect", emit)
+        try:
+            repo = shlex.quote(issue.clone_url)
+            co = await self._exec(box, f"git clone --quiet {repo} /work/repo && git -C /work/repo rev-list --count "
+                                       f"{shlex.quote(reported)}..{shlex.quote(default)}",
+                                  emit, timeout=300, label="bisect: clone", quiet=True)
+            if co.exit_code != 0:
+                return {}
+            await self._write(box, "/work/setup.sh", sub.get("setup_sh", ""), emit)
+            await self._write(box, "/work/repro.sh", sub.get("repro_sh", ""), emit)
+            if verdict == "fixed":
+                terms, mapping = "--term-old=broken --term-new=fixed", "[ $rc -eq 1 ] && exit 0; [ $rc -eq 0 ] && exit 1"
+            else:
+                terms, mapping = "--term-old=good --term-new=bad", "[ $rc -eq 0 ] && exit 0; [ $rc -eq 1 ] && exit 1"
+            step = ("cd /work/repo && (bash /work/setup.sh >/dev/null 2>&1 || exit 125); "
+                    f"bash /work/repro.sh >/dev/null 2>&1; rc=$?; {mapping}; exit 125")
+            await self._write(box, "/work/bisect-step.sh", step + "\n", emit)
+            result = await self._exec(
+                box,
+                f"cd /work/repo && git bisect start {terms} {shlex.quote(default)} {shlex.quote(reported)} >/dev/null && "
+                "git bisect run bash /work/bisect-step.sh 2>&1 | tail -25; "
+                "git bisect log | grep -E '^# first' ; git bisect reset >/dev/null 2>&1; true",
+                emit, timeout=480, label="bisect: run",
+            )
+            commit = subject = ""
+            for line in result.output.splitlines():
+                if line.startswith("# first "):
+                    tail = line.split(":", 1)[-1].strip()
+                    commit, _, subject = tail.lstrip("[").partition("]")
+                    subject = subject.strip()
+            info = {"commit": commit.strip(), "subject": subject, "range": f"{reported[:12]}..{default[:12]}",
+                    "commits_in_range": co.output.strip().splitlines()[-1] if co.output.strip() else ""}
+            emit("bisect", **info)
+            return info if commit else {}
+        finally:
+            await self._destroy(box, emit, "bisect finished")
 
     async def _verify(self, job_id: str, issue: Issue, ref: str, role: str, sub: dict, emit) -> RefRun:
         box = await self._start_sandbox(job_id, f"verify-{role}", emit)

@@ -1,0 +1,7 @@
+services:
+  app:
+    environment:
+      REPRO_INFERENCE_URL: http://127.0.0.1:9999/v1
+      VULTR_INFERENCE_KEY: scripted
+      VULTR_INFERENCE_KEY_FILE: ""
+      REPRO_MODEL: scripted-test-model

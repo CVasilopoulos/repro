@@ -204,6 +204,9 @@ function render(e) {
     case "verify_result":
       addStep(d.outcome === "error" ? "fail-step" : "ok-step", [t, pill("verify " + d.role), d.ref], el("div", "", `commit ${d.commit ? d.commit.slice(0, 12) : "?"}, setup exit ${d.setup_exit}, repro exits ${d.repro_exits.join(", ") || "none"}: ${d.outcome}${d.lost ? " (" + d.lost + ")" : ""}`));
       break;
+    case "bisect":
+      addStep("ok-step", [t, pill("bisect")], el("div", "", d.commit ? `first changed commit ${d.commit.slice(0, 12)}: ${d.subject}` : "bisect found no single commit"), el("div", "muted", `range ${d.range}, ${d.commits_in_range} commits`));
+      break;
     case "verdict":
       showVerdict(d);
       break;
@@ -233,6 +236,9 @@ function showVerdict(d) {
   box.className = "verdict " + d.verdict;
   box.innerHTML = "";
   box.append(el("div", "label", d.title), el("div", "", d.why));
+  if (d.culprit && d.culprit.commit) {
+    box.append(el("div", "cmd", `${d.verdict === "fixed" ? "fixed by" : "introduced by"} ${d.culprit.commit.slice(0, 12)} ${d.culprit.subject || ""}`));
+  }
   if (d.reported && d.default) {
     const table = el("table");
     const head = el("tr");

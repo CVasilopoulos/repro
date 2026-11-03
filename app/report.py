@@ -21,6 +21,11 @@ def render_report(job: dict, events: list[dict]) -> str:
     lines += [f"**Issue:** [{issue.get('title', '')}]({issue.get('url', job.get('issue_url', ''))})", ""]
     if verdict:
         lines += [f"## Verdict: {verdict.get('title', '')}", "", verdict.get("why", ""), ""]
+        culprit = verdict.get("culprit") or {}
+        if culprit.get("commit"):
+            label = "Fixed by" if verdict.get("verdict") == "fixed" else "Introduced by"
+            lines += [f"**{label}:** `{culprit['commit'][:12]}` {culprit.get('subject', '')} (git bisect over "
+                      f"`{culprit.get('range', '')}`, {culprit.get('commits_in_range', '?')} commits)", ""]
         rows = []
         for key in ("reported", "default"):
             r = verdict.get(key)

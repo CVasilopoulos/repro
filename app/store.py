@@ -73,8 +73,11 @@ class Store:
         keys = ["id", "issue_url", "status", "verdict", "created", "finished"]
         return [dict(zip(keys, r)) for r in cur.fetchall()]
 
-    def jobs_from_client_since(self, client: str, since: float) -> int:
-        cur = self.db.execute("select count(*) from jobs where client = ? and created > ?", (client, since))
+    def jobs_from_client_since(self, client: str, since: float, lab: bool = False) -> int:
+        op = "like" if lab else "not like"
+        cur = self.db.execute(
+            f"select count(*) from jobs where client = ? and created > ? and issue_url {op} 'lab:%'", (client, since)
+        )
         return cur.fetchone()[0]
 
     def emit(self, job_id: str, kind: str, **data) -> dict:

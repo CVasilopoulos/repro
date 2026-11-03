@@ -106,7 +106,7 @@ async def create_lab(req: LabRequest, request: Request):
     if req.preset not in PRESETS:
         raise HTTPException(400, "unknown attack")
     who = client_id(request)
-    if store.jobs_from_client_since(who, time.time() - 3600) >= settings.jobs_per_ip_per_hour * 5:
+    if store.jobs_from_client_since(who, time.time() - 3600, lab=True) >= settings.jobs_per_ip_per_hour * 5:
         raise HTTPException(429, "too many runs from your address this hour")
     job_id = store.create_job(f"lab:{req.preset}", who)
     task = asyncio.create_task(runner.run_lab(job_id, req.preset))
