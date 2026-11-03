@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repro: verified bug reproductions</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><span class="dot"></span>Repro</a>
+  <span class="tag">Every command runs in a throwaway gVisor sandbox on Vultr</span>
+</header>
+
+<main id="home" hidden>
+  <section class="hero">
+    <h1>Is this bug report real?</h1>
+    <p>Paste a GitHub issue. Repro reads it, writes a minimal reproduction, runs it at the reported commit and on the default branch, and returns a verdict with the exact commands, exit codes and output hashes. The issue is untrusted input, so all of it runs in a sandbox that is destroyed afterwards.</p>
+    <form id="start">
+      <input id="issue" type="url" required placeholder="https://github.com/owner/repo/issues/123" autocomplete="off">
+      <button type="submit">Reproduce</button>
+    </form>
+    <p id="form-error" class="error" hidden></p>
+  </section>
+  <section>
+    <h2>Try one</h2>
+    <div id="examples" class="examples"></div>
+  </section>
+  <section>
+    <h2>Recent runs</h2>
+    <table class="recent"><tbody id="recent"></tbody></table>
+  </section>
+</main>
+
+<main id="job" hidden>
+  <section class="job-head">
+    <div>
+      <div class="muted" id="job-repo"></div>
+      <h1 id="job-title">Loading</h1>
+      <div class="muted" id="job-status"></div>
+    </div>
+    <div class="actions">
+      <a id="report-link" class="button secondary" href="#">Download report</a>
+      <button id="comment-btn" class="secondary" hidden>Post as comment</button>
+    </div>
+  </section>
+  <section id="verdict" class="verdict" hidden></section>
+  <div class="grid">
+    <section class="timeline-wrap">
+      <h2>What happened</h2>
+      <ol id="timeline" class="timeline"></ol>
+    </section>
+    <aside>
+      <div class="card">
+        <h3>Containment</h3>
+        <ul id="containment" class="containment"><li class="muted">Nothing blocked yet.</li></ul>
+      </div>
+      <div class="card">
+        <h3>Network egress</h3>
+        <ul id="egress" class="egress"><li class="muted">No connections yet.</li></ul>
+      </div>
+      <div class="card">
+        <h3>Sandboxes</h3>
+        <ul id="sandboxes" class="sandboxes"></ul>
+        <details>
+          <summary>Sandbox spec</summary>
+          <dl id="spec" class="spec"></dl>
+        </details>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer class="foot">
+  <span id="foot-model"></span>
+  <a href="https://github.com/CVasilopoulos/repro">Source</a>
+</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>

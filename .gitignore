@@ -1,0 +1,6 @@
+__pycache__/
+.pytest_cache/
+deploy/.env
+deploy/secrets/
+*.pyc
+.venv/

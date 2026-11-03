@@ -1,0 +1,75 @@
+name: repro
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: app/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      REPRO_DATA_DIR: /data
+      REPRO_GATE_LEDGER: /ledger/egress.jsonl
+      REPRO_SANDBOX_NETWORK: repro-sandbox
+      REPRO_GATE_URL: http://172.30.0.2:3128
+      VULTR_INFERENCE_KEY_FILE: /run/secrets/vultr_inference_key
+    secrets:
+      - vultr_inference_key
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - repro-data:/data
+      - repro-ledger:/ledger
+    networks:
+      - web
+    depends_on:
+      - gate
+    mem_limit: 1g
+    cpus: 1.0
+
+  gate:
+    build: ../gate
+    restart: unless-stopped
+    environment:
+      GATE_LEDGER: /ledger/egress.jsonl
+    mem_limit: 256m
+    cpus: 0.5
+    volumes:
+      - repro-ledger:/ledger
+    networks:
+      sandbox:
+        ipv4_address: 172.30.0.2
+      egress: {}
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    mem_limit: 256m
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      REPRO_DOMAIN: ${REPRO_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    networks:
+      - web
+
+networks:
+  web: {}
+  egress: {}
+  sandbox:
+    name: repro-sandbox
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  repro-data: {}
+  repro-ledger: {}
+  caddy-data: {}
+
+secrets:
+  vultr_inference_key:
+    file: ./secrets/vultr_inference_key
