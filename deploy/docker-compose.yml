@@ -17,6 +17,7 @@ services:
       - vultr_inference_key
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /sys/fs/cgroup:/host-cgroup:ro
       - repro-data:/data
       - repro-ledger:/ledger
     networks:

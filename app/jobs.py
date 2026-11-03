@@ -10,6 +10,7 @@ from openai import AsyncOpenAI
 from .agent import Agent, ToolOutcome, clip
 from .config import Settings
 from .github import Issue, fetch_issue
+from .lab import HEALTH_CHECK, PRESETS
 from .report import render_report
 from .sandbox import ExecResult, Sandbox, docker_client
 from .store import Store
@@ -78,6 +79,36 @@ class JobRunner:
             finally:
                 emit("done", seconds=round(time.time() - started, 1))
 
+    async def run_lab(self, job_id: str, preset: str) -> None:
+        emit = lambda kind, **data: self.store.emit(job_id, kind, **data)
+        spec = PRESETS[preset]
+        self.store.update_job(job_id, status="waiting")
+        async with self.slots:
+            self.store.update_job(job_id, status="running")
+            started = time.time()
+            try:
+                emit("lab", preset=preset, title=spec["title"], explain=spec["explain"])
+                box = await self._start_sandbox(job_id, "lab", emit)
+                try:
+                    result = await self._exec(box, spec["command"], emit, timeout=spec["timeout"], label="attack")
+                finally:
+                    await self._destroy(box, emit, "attack finished")
+                fresh = await self._start_sandbox(job_id, "next-task", emit)
+                try:
+                    check = await self._exec(fresh, HEALTH_CHECK, emit, timeout=30, label="next task")
+                finally:
+                    await self._destroy(fresh, emit, "check finished")
+                contained = check.exit_code == 0
+                summary = "contained: the next sandbox started clean" if contained else "next sandbox check failed"
+                emit("lab_result", contained=contained, attack_exit=result.exit_code, summary=summary)
+                self.store.update_job(job_id, status="done", verdict="contained" if contained else "inconclusive",
+                                      finished=time.time(), summary=f"{spec['title']}: {summary}")
+            except Exception as exc:
+                emit("error", message=f"{type(exc).__name__}: {exc}")
+                self.store.update_job(job_id, status="failed", finished=time.time(), summary=str(exc)[:500])
+            finally:
+                emit("done", seconds=round(time.time() - started, 1))
+
     async def _start_sandbox(self, job_id: str, role: str, emit) -> Sandbox:
         box = Sandbox(self.docker, self.settings, job_id, role)
         info = await asyncio.to_thread(box.start)
@@ -98,12 +129,18 @@ class JobRunner:
     async def _exec(self, box: Sandbox, command: str, emit, timeout: int | None = None, label: str = "",
                     quiet: bool = False) -> ExecResult:
         emit("exec_start", sandbox=box.info.name, command=command, label=label)
+        oom_before = await asyncio.to_thread(box.oom_kills)
         result = await asyncio.to_thread(box.exec, command, timeout)
+        oom_after = await asyncio.to_thread(box.oom_kills) if not result.sandbox_lost else None
         emit("exec_end", sandbox=box.info.name, command=command, label=label, exit_code=result.exit_code,
              duration=result.duration, sha256=result.sha256, truncated=result.truncated, timed_out=result.timed_out,
              output=clip(result.output, 1500, 3500) if not quiet else clip(result.output, 300, 700))
         for hit in containment_signals(command, result.output):
             emit("containment", sandbox=box.info.name, **hit)
+        if oom_before is not None and oom_after is not None and oom_after > oom_before:
+            emit("containment", sandbox=box.info.name, signal="memory_limit",
+                 label=f"memory limit {self.settings.limits.memory} reached: the kernel killed the process",
+                 count=oom_after - oom_before, sample="")
         if result.timed_out:
             emit("containment", sandbox=box.info.name, signal="time_limit",
                  label=f"time limit reached ({timeout or self.settings.limits.command_timeout}s): command killed",

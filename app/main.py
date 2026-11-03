@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from .config import settings
 from .github import parse_issue_url, post_comment
 from .jobs import JobRunner, SandboxRegistry, job_report, tail_ledger
+from .lab import PRESETS
 from .sandbox import sandbox_spec
 from .store import Store
 
@@ -40,6 +41,10 @@ app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 class JobRequest(BaseModel):
     issue_url: str
+
+
+class LabRequest(BaseModel):
+    preset: str
 
 
 class CommentRequest(BaseModel):
@@ -73,6 +78,7 @@ async def config():
         "sandbox": sandbox_spec(settings),
         "examples": examples,
         "comment_repos": list(settings.comment_repos),
+        "lab": [{"id": k, "title": v["title"], "explain": v["explain"]} for k, v in PRESETS.items()],
         "limits": {"jobs_per_ip_per_hour": settings.jobs_per_ip_per_hour, "max_concurrent": settings.max_concurrent_jobs},
     }
 
@@ -90,6 +96,20 @@ async def create_job(req: JobRequest, request: Request):
         raise HTTPException(503, "today's inference budget is used up; recent reports are still browsable")
     job_id = store.create_job(req.issue_url.strip(), who)
     task = asyncio.create_task(runner.run(job_id, req.issue_url.strip()))
+    tasks.add(task)
+    task.add_done_callback(tasks.discard)
+    return {"id": job_id}
+
+
+@app.post("/api/lab")
+async def create_lab(req: LabRequest, request: Request):
+    if req.preset not in PRESETS:
+        raise HTTPException(400, "unknown attack")
+    who = client_id(request)
+    if store.jobs_from_client_since(who, time.time() - 3600) >= settings.jobs_per_ip_per_hour * 5:
+        raise HTTPException(429, "too many runs from your address this hour")
+    job_id = store.create_job(f"lab:{req.preset}", who)
+    task = asyncio.create_task(runner.run_lab(job_id, req.preset))
     tasks.add(task)
     task.add_done_callback(tasks.discard)
     return {"id": job_id}

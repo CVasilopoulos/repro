@@ -231,6 +231,23 @@ class Sandbox:
         result.command = f"write {path} ({len(content)} bytes, sha256 {hashlib.sha256(content.encode()).hexdigest()[:12]})"
         return result
 
+    def oom_kills(self) -> int | None:
+        if not self.container:
+            return None
+        for path in (
+            f"{self.settings.cgroup_root}/system.slice/docker-{self.container.id}.scope/memory.events",
+            f"{self.settings.cgroup_root}/docker/{self.container.id}/memory.events",
+        ):
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    for line in fh:
+                        name, _, value = line.partition(" ")
+                        if name == "oom_kill":
+                            return int(value)
+            except OSError:
+                continue
+        return None
+
     def pids_current(self) -> int | None:
         try:
             stats = self.container.stats(stream=False)

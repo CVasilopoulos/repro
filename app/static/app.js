@@ -33,12 +33,22 @@ async function home() {
     b.onclick = () => start(e.url);
     ex.append(b);
   }
+  const lab = $("#lab");
+  lab.innerHTML = "";
+  for (const a of config.lab || []) {
+    const b = el("button", "example");
+    b.type = "button";
+    b.append(el("span", "kind hostile", "attack"), el("b", "", a.title), el("small", "", a.explain));
+    b.onclick = () => startLab(a.id);
+    lab.append(b);
+  }
   const rows = await (await fetch("/api/jobs")).json();
   const tb = $("#recent");
   tb.innerHTML = "";
   for (const r of rows) {
     const tr = el("tr");
-    const a = el("a", "", r.issue_url.replace("https://github.com/", ""));
+    const label = r.issue_url.startsWith("lab:") ? "attack lab: " + r.issue_url.slice(4) : r.issue_url.replace("https://github.com/", "");
+    const a = el("a", "", label);
     a.href = `/j/${r.id}`;
     const td = el("td");
     td.append(a);
@@ -50,6 +60,19 @@ async function home() {
     ev.preventDefault();
     start($("#issue").value);
   };
+}
+
+async function startLab(preset) {
+  const res = await fetch("/api/lab", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ preset }) });
+  const body = await res.json();
+  if (!res.ok) {
+    const err = $("#form-error");
+    err.textContent = body.detail || "Could not start";
+    err.hidden = false;
+    window.scrollTo(0, 0);
+    return;
+  }
+  location.href = `/j/${body.id}`;
 }
 
 async function start(url) {
@@ -90,6 +113,21 @@ function render(e) {
       document.title = `Repro: ${d.owner}/${d.repo}#${d.number}`;
       addStep("", [t, "issue"], el("div", "", `Filed by ${d.author} on ${d.created_at.slice(0, 10)}. The issue text is treated as untrusted input.`));
       break;
+    case "lab":
+      $("#job-repo").textContent = "Attack lab";
+      $("#job-title").textContent = d.title;
+      document.title = `Repro attack lab: ${d.title}`;
+      addStep("", [t, "attack"], el("div", "", d.explain));
+      $("#comment-btn").hidden = true;
+      break;
+    case "lab_result": {
+      const box = $("#verdict");
+      box.hidden = false;
+      box.className = "verdict " + (d.contained ? "fixed" : "inconclusive");
+      box.innerHTML = "";
+      box.append(el("div", "label", d.contained ? "Contained" : "Check failed"), el("div", "", d.summary));
+      break;
+    }
     case "status":
       $("#job-status").textContent = d.message;
       break;

@@ -52,3 +52,11 @@ def test_gate_refusal_and_metadata_probe_are_detected():
 
 def test_clean_output_has_no_signals():
     assert containment_signals("pytest -q", "3 passed in 0.12s\n") == []
+
+
+def test_every_lab_preset_has_a_bounded_timeout_and_explanation():
+    from app.lab import PRESETS
+
+    for key, spec in PRESETS.items():
+        assert spec["title"] and spec["explain"] and spec["command"]
+        assert 0 < spec["timeout"] <= 120, key

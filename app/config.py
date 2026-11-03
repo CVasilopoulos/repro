@@ -34,6 +34,7 @@ class Settings:
     gate_url: str = field(default_factory=lambda: _env("REPRO_GATE_URL", "http://172.30.0.2:3128"))
     gate_ledger: str = field(default_factory=lambda: _env("REPRO_GATE_LEDGER", "/ledger/egress.jsonl"))
     data_dir: str = field(default_factory=lambda: _env("REPRO_DATA_DIR", "/data"))
+    cgroup_root: str = field(default_factory=lambda: _env("REPRO_CGROUP_ROOT", "/host-cgroup"))
     inference_url: str = field(default_factory=lambda: _env("REPRO_INFERENCE_URL", "https://api.vultrinference.com/v1"))
     inference_key: str = field(default_factory=lambda: _read_secret("VULTR_INFERENCE_KEY"))
     model: str = field(default_factory=lambda: _env("REPRO_MODEL", "glm-5.3"))
