@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 600" width="980" height="600" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3a3f47"/>
+    </marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b3261e"/>
+    </marker>
+  </defs>
+  <rect width="980" height="600" fill="#ffffff"/>
+
+  <rect x="20" y="70" width="110" height="56" rx="8" fill="#f3f4f6" stroke="#9aa0a6"/>
+  <text x="75" y="95" text-anchor="middle" font-size="14" font-weight="700" fill="#1c1d1f">Browser</text>
+  <text x="75" y="113" text-anchor="middle" font-size="11" fill="#555">live log over SSE</text>
+
+  <rect x="160" y="20" width="560" height="560" rx="14" fill="#f7f9ff" stroke="#0b63ce" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="176" y="44" font-size="13" font-weight="700" fill="#0b63ce">Vultr Cloud Compute VM (Ubuntu 24.04)</text>
+
+  <rect x="180" y="62" width="96" height="72" rx="8" fill="#ffffff" stroke="#9aa0a6"/>
+  <text x="228" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#1c1d1f">Caddy</text>
+  <text x="228" y="110" text-anchor="middle" font-size="11" fill="#555">TLS</text>
+
+  <rect x="300" y="56" width="400" height="168" rx="10" fill="#ffffff" stroke="#3a3f47"/>
+  <text x="316" y="80" font-size="14" font-weight="700" fill="#1c1d1f">Repro backend (FastAPI)</text>
+  <text x="316" y="102" font-size="12" fill="#333">job queue, event store, rate limits, token budget</text>
+  <rect x="316" y="114" width="118" height="48" rx="6" fill="#eef4ff" stroke="#0b63ce"/>
+  <text x="375" y="134" text-anchor="middle" font-size="12" font-weight="700" fill="#0b63ce">agent loop</text>
+  <text x="375" y="151" text-anchor="middle" font-size="10" fill="#333">tool calls</text>
+  <rect x="442" y="114" width="118" height="48" rx="6" fill="#e5f4ec" stroke="#1f7a4d"/>
+  <text x="501" y="134" text-anchor="middle" font-size="12" font-weight="700" fill="#1f7a4d">verifier</text>
+  <text x="501" y="151" text-anchor="middle" font-size="10" fill="#333">exit codes decide</text>
+  <rect x="568" y="114" width="118" height="48" rx="6" fill="#f3f4f6" stroke="#6b7280"/>
+  <text x="627" y="134" text-anchor="middle" font-size="12" font-weight="700" fill="#374151">bisect</text>
+  <text x="627" y="151" text-anchor="middle" font-size="10" fill="#333">first changed commit</text>
+  <text x="316" y="186" font-size="11" fill="#555">holds the inference key; drives Docker; the only</text>
+  <text x="316" y="201" font-size="11" fill="#555">component that can start or destroy a sandbox</text>
+
+  <line x1="130" y1="98" x2="178" y2="98" stroke="#3a3f47" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="276" y1="98" x2="298" y2="98" stroke="#3a3f47" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="760" y="62" width="200" height="86" rx="10" fill="#eef4ff" stroke="#0b63ce" stroke-width="1.5"/>
+  <text x="860" y="88" text-anchor="middle" font-size="13" font-weight="700" fill="#0b63ce">Vultr Serverless</text>
+  <text x="860" y="106" text-anchor="middle" font-size="13" font-weight="700" fill="#0b63ce">Inference</text>
+  <text x="860" y="126" text-anchor="middle" font-size="11" fill="#333">OpenAI-compatible API</text>
+  <line x1="700" y1="105" x2="758" y2="105" stroke="#0b63ce" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <line x1="500" y1="224" x2="500" y2="258" stroke="#3a3f47" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="508" y="246" font-size="11" fill="#555">Docker API: start, exec, destroy</text>
+
+  <rect x="180" y="262" width="520" height="190" rx="10" fill="#fff8f6" stroke="#b3261e" stroke-width="1.5"/>
+  <text x="196" y="286" font-size="13" font-weight="700" fill="#b3261e">Sandbox network: internal, no route out</text>
+  <g font-size="12">
+    <rect x="196" y="298" width="118" height="60" rx="6" fill="#ffffff" stroke="#b3261e"/>
+    <text x="255" y="322" text-anchor="middle" font-weight="700" fill="#1c1d1f">agent</text>
+    <text x="255" y="340" text-anchor="middle" font-size="10" fill="#555">clone, explore, write</text>
+    <rect x="322" y="298" width="118" height="60" rx="6" fill="#ffffff" stroke="#b3261e"/>
+    <text x="381" y="322" text-anchor="middle" font-weight="700" fill="#1c1d1f">verify @reported</text>
+    <text x="381" y="340" text-anchor="middle" font-size="10" fill="#555">setup + repro x2</text>
+    <rect x="448" y="298" width="118" height="60" rx="6" fill="#ffffff" stroke="#b3261e"/>
+    <text x="507" y="322" text-anchor="middle" font-weight="700" fill="#1c1d1f">verify @default</text>
+    <text x="507" y="340" text-anchor="middle" font-size="10" fill="#555">setup + repro x2</text>
+    <rect x="574" y="298" width="110" height="60" rx="6" fill="#ffffff" stroke="#b3261e"/>
+    <text x="629" y="322" text-anchor="middle" font-weight="700" fill="#1c1d1f">bisect / lab</text>
+    <text x="629" y="340" text-anchor="middle" font-size="10" fill="#555">fresh each time</text>
+  </g>
+  <text x="196" y="384" font-size="11" fill="#333">each: gVisor runsc, read-only root, tmpfs /work, uid 1000, no capabilities,</text>
+  <text x="196" y="400" font-size="11" fill="#333">2 GB, 2 CPUs, 256 processes, time limit, no socket, no host mounts, no keys</text>
+  <text x="196" y="416" font-size="11" fill="#333">destroyed when the step ends</text>
+
+  <rect x="300" y="476" width="280" height="84" rx="10" fill="#ffffff" stroke="#3a3f47" stroke-width="1.5"/>
+  <text x="440" y="500" text-anchor="middle" font-size="14" font-weight="700" fill="#1c1d1f">Egress gate</text>
+  <text x="440" y="518" text-anchor="middle" font-size="11" fill="#333">allowlisted hosts, ports 80/443 only</text>
+  <text x="440" y="534" text-anchor="middle" font-size="11" fill="#333">refuses private, loopback, link-local,</text>
+  <text x="440" y="550" text-anchor="middle" font-size="11" fill="#333">metadata addresses after DNS</text>
+  <line x1="440" y1="452" x2="440" y2="474" stroke="#3a3f47" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="448" y="468" font-size="11" fill="#555">HTTP(S)_PROXY</text>
+
+  <path d="M300 518 H170 V200 H298" fill="none" stroke="#6b7280" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#a)"/>
+  <text x="178" y="540" font-size="11" fill="#555">ledger: every</text>
+  <text x="178" y="554" font-size="11" fill="#555">attempt, live</text>
+
+  <rect x="760" y="440" width="200" height="56" rx="10" fill="#e5f4ec" stroke="#1f7a4d"/>
+  <text x="860" y="463" text-anchor="middle" font-size="12" font-weight="700" fill="#1f7a4d">GitHub, PyPI, npm,</text>
+  <text x="860" y="481" text-anchor="middle" font-size="12" font-weight="700" fill="#1f7a4d">Go, crates</text>
+  <line x1="580" y1="500" x2="758" y2="474" stroke="#1f7a4d" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="760" y="520" width="200" height="56" rx="10" fill="#fbe9e7" stroke="#b3261e"/>
+  <text x="860" y="543" text-anchor="middle" font-size="12" font-weight="700" fill="#b3261e">169.254.169.254, pastebin,</text>
+  <text x="860" y="561" text-anchor="middle" font-size="12" font-weight="700" fill="#b3261e">raw IPs, other ports</text>
+  <line x1="580" y1="536" x2="740" y2="548" stroke="#b3261e" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="744" y="553" font-size="16" font-weight="700" fill="#b3261e">x</text>
+  <text x="620" y="572" font-size="11" fill="#b3261e">403, logged</text>
+</svg>
