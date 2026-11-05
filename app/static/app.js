@@ -90,7 +90,7 @@ async function start(url) {
   location.href = `/j/${body.id}`;
 }
 
-const state = { sandboxes: new Map(), egress: new Map(), containment: 0, pending: new Map() };
+const state = { sandboxes: new Map(), egress: new Map(), containment: 0, pending: new Map(), notes: "" };
 
 function addStep(cls, meta, ...children) {
   const li = el("li", cls);
@@ -201,6 +201,7 @@ function render(e) {
       break;
     }
     case "agent_finished":
+      state.notes = d.notes || "";
       addStep("", [t, "agent", d.outcome], el("div", "", d.claim ? `Claim: ${d.claim}` : d.reason || ""), d.notes ? el("div", "muted", d.notes) : "", el("div", "muted", `${d.tool_calls} tool calls, ${d.prompt_tokens + d.completion_tokens} tokens`));
       break;
     case "verify_result":
@@ -220,6 +221,8 @@ function render(e) {
       break;
     case "done":
       $("#job-status").textContent = `Finished in ${d.seconds}s`;
+      if (!state.containment) $("#containment").firstElementChild.textContent = "Nothing blocked.";
+      if (!state.egress.size) $("#egress").firstElementChild.textContent = "No connections.";
       break;
   }
 }
@@ -238,9 +241,6 @@ function showVerdict(d) {
   box.className = "verdict " + d.verdict;
   box.innerHTML = "";
   box.append(el("div", "label", d.title), el("div", "", d.why));
-  if (d.culprit && d.culprit.commit) {
-    box.append(el("div", "cmd", `${d.verdict === "fixed" ? "fixed by" : "introduced by"} ${d.culprit.commit.slice(0, 12)} ${d.culprit.subject || ""}`));
-  }
   if (d.reported && d.default) {
     const table = el("table");
     const head = el("tr");
@@ -248,10 +248,16 @@ function showVerdict(d) {
     table.append(head);
     for (const [name, r] of [["reported", d.reported], ["default branch", d.default]]) {
       const tr = el("tr");
-      for (const v of [name, r.ref, (r.commit || "").slice(0, 12), r.setup_exit, r.repro_exits.join(", "), r.outcome]) tr.append(el("td", "", String(v)));
+      for (const v of [name, /^[0-9a-f]{40}$/.test(r.ref) ? r.ref.slice(0, 12) : r.ref, (r.commit || "").slice(0, 12), r.setup_exit, r.repro_exits.join(", "), r.outcome]) tr.append(el("td", "", String(v)));
       table.append(tr);
     }
     box.append(table, el("div", "muted", "Decided by the exit codes of the reproduction, re-run in fresh sandboxes by the backend, not by the model."));
+  }
+  if (state.notes) {
+    const notes = el("details", "notes");
+    notes.open = /hostile|security|suspicious|malicious/i.test(state.notes);
+    notes.append(el("summary", "", "Agent's notes (the verdict does not depend on them)"), el("div", "thought", state.notes));
+    box.append(notes);
   }
   if (config && config.comment_repos.length) {
     const repo = $("#job-repo").textContent.split(" ")[0];

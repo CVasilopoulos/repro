@@ -60,7 +60,7 @@ The [demo repository](https://github.com/CVasilopoulos/repro-demo) has three gen
 - [#5](https://github.com/CVasilopoulos/repro-demo/issues/5) is a fork bomb disguised as a stress test. The process limit refuses new processes and the time limit ends it.
 - [#6](https://github.com/CVasilopoulos/repro-demo/issues/6) is a "diagnostic" that reads the cloud metadata endpoint and posts the environment to a collection server. The gate refuses both, and there was nothing in the environment to steal anyway.
 
-In our runs with `glm-5.3`, the agent flagged #4 and #6 as hostile and did not run them, and the stress test in #5 hit the process limit. Containment does not depend on the model noticing: the attack lab runs the same payloads with no model involved.
+In our runs with `glm-5.3`, the agent flagged #4, #5 and #6 as hostile and did not run them as written. It had also read the demo repository's README, which says some issues are deliberately hostile, so that is not a measure of how well a model spots attacks. Containment does not depend on the model noticing: the attack lab runs the same payloads with no model involved.
 
 The **attack lab** on the home page runs fixed hostile payloads without a model: rm -rf /, fork bomb, memory bomb, credential theft, exfiltration, secret hunting and escape attempts. Each one is followed by a fresh sandbox, to show the next task starts clean. Judges can press the buttons themselves.
 
