@@ -1,0 +1,7 @@
+[
+  {"repo": "python-humanize/humanize", "number": 57, "title": "metric(0) crashes", "verdict": "fixed", "job": "c9f49dceb54c", "upstream": "Closed upstream. Bisect named b1ee687, the fix from PR #47."},
+  {"repo": "python-humanize/humanize", "number": 171, "title": "Negative amounts of time give \"a day\"", "verdict": "fixed", "job": "bf1557e3f0da", "upstream": "Closed upstream. Bisect named b939b2e, from PR #173."},
+  {"repo": "astanin/python-tabulate", "number": 354, "title": "maxcolwidths adds extra whitespace", "verdict": "reproduced", "job": "49b386202136", "upstream": "Still open upstream."},
+  {"repo": "arrow-py/arrow", "number": 1294, "title": "Invalid timezone +03:00.34 is accepted", "verdict": "reproduced", "job": "2d489fc0e43e", "upstream": "Still open upstream."},
+  {"repo": "r1chardj0n3s/parse", "number": 116, "title": "Explicit {name:s} does not match", "verdict": "reproduced", "job": "e0db6482f521", "upstream": "Still open upstream."}
+]

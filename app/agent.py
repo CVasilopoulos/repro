@@ -130,6 +130,9 @@ Top-level files: {', '.join(ctx['files'])}
 """
 
 
+BUDGET_WARNING = 5
+
+
 class Agent:
     def __init__(self, client: AsyncOpenAI, model: str, max_tool_calls: int, emit: Callable[..., None],
                  budget_check: Callable[[int], bool] | None = None):
@@ -146,6 +149,7 @@ class Agent:
         ]
         calls = 0
         nudges = 0
+        warned = False
         prompt_tokens = completion_tokens = 0
         while True:
             if calls >= self.max_tool_calls:
@@ -199,6 +203,10 @@ class Agent:
                 if outcome.final is not None:
                     return AgentResult("submit", outcome.final, calls, prompt_tokens, completion_tokens, messages)
                 messages.append({"role": "tool", "tool_call_id": tc.id, "content": outcome.text})
+            left = self.max_tool_calls - calls
+            if 0 < left <= BUDGET_WARNING and not warned:
+                warned = True
+                messages.append({"role": "user", "content": f"{left} tool calls left. Call submit with your scripts now, or give_up if you cannot."})
             if len(messages) > 24:
                 for m in messages[2:-12]:
                     if m["role"] == "tool" and len(m["content"]) > 1200:

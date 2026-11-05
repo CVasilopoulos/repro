@@ -68,6 +68,17 @@ def test_agent_stops_when_the_tool_budget_is_used_up():
     assert result.kind == "budget" and result.tool_calls == 3
 
 
+def test_agent_warns_the_model_once_when_few_tool_calls_remain():
+    llm = ScriptedLLM([reply("", [tool_call(i, "run_command", {"command": "true"})]) for i in range(8)])
+
+    async def run_command(args):
+        return ToolOutcome("exit code 0")
+
+    asyncio.run(Agent(llm, "m", 8, lambda *a, **k: None).run(CTX, {"run_command": run_command}))
+    warnings = [m for m in llm.seen[-1] if m["role"] == "user" and "tool calls left" in m["content"]]
+    assert [m["content"].split()[0] for m in warnings] == ["5"]
+
+
 def test_agent_gives_up_after_repeated_replies_without_tools():
     llm = ScriptedLLM([reply("thinking") for _ in range(5)])
     result = asyncio.run(Agent(llm, "m", 10, lambda *a, **k: None).run(CTX, {}))

@@ -18,6 +18,7 @@ from .store import Store
 
 STATIC = os.path.join(os.path.dirname(__file__), "static")
 EXAMPLES_FILE = os.path.join(os.path.dirname(__file__), "examples.json")
+SHOWCASE_FILE = os.path.join(os.path.dirname(__file__), "showcase.json")
 
 store = Store(os.path.join(settings.data_dir, "repro.db"))
 registry = SandboxRegistry()
@@ -69,6 +70,13 @@ class CommentRequest(BaseModel):
     confirm: bool = False
 
 
+def read_json(path: str) -> list:
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
 def client_id(request: Request) -> str:
     fwd = request.headers.get("x-forwarded-for", "")
     return fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "?")
@@ -86,16 +94,13 @@ async def job_page(job_id: str):
 
 @app.get("/api/config")
 async def config():
-    examples = []
-    if os.path.exists(EXAMPLES_FILE):
-        with open(EXAMPLES_FILE, encoding="utf-8") as fh:
-            examples = json.load(fh)
     return {
         "model": settings.model,
         "inference": settings.inference_url,
         "sandbox": sandbox_spec(settings),
         "runtime_check": runtime_check,
-        "examples": examples,
+        "examples": read_json(EXAMPLES_FILE),
+        "showcase": read_json(SHOWCASE_FILE),
         "comment_repos": list(settings.comment_repos),
         "lab": [{"id": k, "title": v["title"], "explain": v["explain"]} for k, v in PRESETS.items()],
         "limits": {"jobs_per_ip_per_hour": settings.jobs_per_ip_per_hour, "max_concurrent": settings.max_concurrent_jobs},

@@ -35,6 +35,14 @@ async function home() {
     b.onclick = () => start(e.url);
     ex.append(b);
   }
+  const showcase = $("#showcase");
+  showcase.innerHTML = "";
+  for (const s of config.showcase || []) {
+    const a = el("a", "example");
+    a.href = `/j/${s.job}`;
+    a.append(el("span", "kind", VERDICT_LABEL[s.verdict] || s.verdict), el("b", "", s.title), el("small", "", `${s.repo}#${s.number}. ${s.upstream}`));
+    showcase.append(a);
+  }
   const lab = $("#lab");
   lab.innerHTML = "";
   for (const a of config.lab || []) {

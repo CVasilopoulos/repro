@@ -53,6 +53,7 @@ button:disabled { opacity: .5; cursor: default; }
 .muted { color: var(--muted); }
 .examples { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
 .example { text-align: left; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-weight: 400; }
+a.example { display: block; text-decoration: none; }
 .example b { display: block; margin-bottom: 4px; }
 .example small { color: var(--muted); }
 .example .kind { font-size: 12px; font-weight: 600; color: var(--accent); }

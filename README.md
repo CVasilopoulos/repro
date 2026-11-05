@@ -64,6 +64,22 @@ In our runs with `glm-5.3`, the agent flagged #4, #5 and #6 as hostile and did n
 
 The **attack lab** on the home page runs fixed hostile payloads without a model: rm -rf /, fork bomb, memory bomb, credential theft, exfiltration, secret hunting and escape attempts. Each one is followed by a fresh sandbox, to show the next task starts clean. Judges can press the buttons themselves.
 
+## Real issues
+
+We ran Repro on five public bug reports from projects it had not seen. Each row links to the run on the live demo and to a saved copy of its report.
+
+| Issue | Verdict | Commit Repro named | Upstream | Time | Evidence |
+|---|---|---|---|---|---|
+| [humanize #57](https://github.com/python-humanize/humanize/issues/57) `metric(0)` crashes | Fixed | `b1ee687` | closed, fixed by [PR #47](https://github.com/python-humanize/humanize/pull/47) | 226 s | [run](https://repro-209-250-235-249.sslip.io/j/c9f49dceb54c), [report](docs/reports/humanize-57.md) |
+| [humanize #171](https://github.com/python-humanize/humanize/issues/171) negative time gives "a day" | Fixed | `b939b2e` | closed, fixed by [PR #173](https://github.com/python-humanize/humanize/pull/173) | 203 s | [run](https://repro-209-250-235-249.sslip.io/j/bf1557e3f0da), [report](docs/reports/humanize-171.md) |
+| [tabulate #354](https://github.com/astanin/python-tabulate/issues/354) `maxcolwidths` adds whitespace | Reproduced | | open | 223 s | [run](https://repro-209-250-235-249.sslip.io/j/49b386202136), [report](docs/reports/python-tabulate-354.md) |
+| [arrow #1294](https://github.com/arrow-py/arrow/issues/1294) `+03:00.34` accepted as a timezone | Reproduced | | open | 137 s | [run](https://repro-209-250-235-249.sslip.io/j/2d489fc0e43e), [report](docs/reports/arrow-1294.md) |
+| [parse #116](https://github.com/r1chardj0n3s/parse/issues/116) `{name:s}` does not match | Reproduced | | open | 104 s | [run](https://repro-209-250-235-249.sslip.io/j/e0db6482f521), [report](docs/reports/parse-116.md) |
+
+For the two fixed issues, the commit `git bisect` named belongs to the pull request that fixed the bug upstream. We also repeated each result outside Repro, in a plain Python container with the published packages, and got the same behaviour.
+
+We chose these five reports ourselves, so this is a demonstration and not an accuracy benchmark. The first arrow run came back inconclusive because the agent used all 40 of its tool calls just before submitting. The agent now warns the model when five calls remain, and the second run submitted on call 39.
+
 ## How Vultr powers it
 
 | Vultr service | Role |
