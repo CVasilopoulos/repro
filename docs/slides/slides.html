@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Repro slides</title>
+<style>
+@page { size: 1920px 1080px; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #fff; }
+body { font-family: Inter, Arial, sans-serif; color: #15181d; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.s { width: 1920px; height: 1080px; padding: 92px 120px 84px; position: relative; overflow: hidden; page-break-after: always; break-after: page; display: flex; flex-direction: column; background: #f7f7f4; }
+.s:last-child { page-break-after: auto; break-after: auto; }
+.s.dark { background: #101317; color: #eef0f3; }
+.brand { display: flex; align-items: center; gap: 14px; font-size: 30px; font-weight: 600; }
+.brand i { width: 22px; height: 22px; border-radius: 5px; background: #2f7fe6; display: inline-block; }
+.n { position: absolute; right: 120px; bottom: 46px; font-size: 22px; color: #868b94; }
+.src { position: absolute; left: 120px; bottom: 46px; font-size: 21px; color: #6d7179; }
+h1 { font-size: 84px; line-height: 1.08; font-weight: 700; letter-spacing: -1px; margin: 0; }
+h2 { font-size: 58px; line-height: 1.12; font-weight: 700; letter-spacing: -0.6px; margin: 0 0 46px; max-width: 1600px; }
+p { font-size: 32px; line-height: 1.42; margin: 0; }
+.muted { color: #5c6068; }
+.dark .muted { color: #a9afb9; }
+ul { margin: 0; padding: 0; list-style: none; }
+.points li { font-size: 34px; line-height: 1.36; padding: 24px 0; border-top: 1px solid #dcdcd5; }
+.points li:last-child { border-bottom: 1px solid #dcdcd5; }
+.points b { font-weight: 650; }
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; margin-bottom: 44px; }
+.flow div { background: #fff; border: 1px solid #dcdcd5; border-radius: 14px; padding: 26px 28px; font-size: 27px; line-height: 1.34; min-height: 214px; }
+.flow b { display: block; font-size: 22px; font-weight: 650; color: #0b63ce; margin-bottom: 12px; }
+.key { background: #e5f4ec; border: 1px solid #1f7a4d; border-radius: 14px; padding: 26px 32px; font-size: 33px; font-weight: 600; color: #145c39; margin-bottom: 34px; }
+table { border-collapse: collapse; width: 100%; font-size: 28px; }
+th { text-align: left; font-size: 22px; font-weight: 650; color: #5c6068; padding: 0 22px 14px 0; border-bottom: 2px solid #15181d; }
+td { padding: 19px 22px 19px 0; border-bottom: 1px solid #dcdcd5; vertical-align: top; line-height: 1.3; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 34px; }
+code { font-family: 'DejaVu Sans Mono', Menlo, monospace; font-size: 0.86em; }
+.tag { display: inline-block; font-size: 23px; font-weight: 650; padding: 3px 12px; border-radius: 7px; }
+.tag.ok { background: #e5f4ec; color: #145c39; }
+.tag.bug { background: #fdf1d8; color: #6f4800; }
+.note { font-size: 26px; line-height: 1.4; color: #5c6068; margin-top: 28px; }
+.two { display: grid; grid-template-columns: 1.62fr 1fr; gap: 44px; flex: 1; min-height: 0; align-items: start; }
+.arch { background: #fff; border: 1px solid #dcdcd5; border-radius: 14px; padding: 12px; }
+.arch svg { width: 100%; height: auto; display: block; }
+.svc li { font-size: 26px; line-height: 1.33; padding: 16px 0; border-top: 1px solid #dcdcd5; }
+.svc b { display: block; font-size: 27px; font-weight: 650; margin-bottom: 3px; }
+.cost { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 40px; }
+.cost div { background: #fff; border: 1px solid #dcdcd5; border-radius: 14px; padding: 24px 28px; font-size: 25px; line-height: 1.34; color: #5c6068; }
+.cost b { display: block; font-size: 46px; font-weight: 700; color: #15181d; letter-spacing: -0.5px; margin-bottom: 8px; }
+.links { font-size: 38px; line-height: 1.7; margin-top: 54px; }
+.links span { display: inline-block; width: 130px; color: #a9afb9; font-size: 28px; }
+.foot { position: absolute; left: 120px; bottom: 58px; font-size: 24px; color: #a9afb9; }
+</style>
+</head>
+<body>
+
+<section class="s dark" style="justify-content:center">
+  <div class="brand"><i></i>Repro</div>
+  <h1 style="margin:40px 0 34px;max-width:1500px">Is this bug report real? Run it, safely, and find out.</h1>
+  <p class="muted" style="max-width:1340px;font-size:37px">An agent writes the reproduction. Fresh gVisor sandboxes on a Vultr VM run it. Exit codes decide the verdict.</p>
+  <div class="foot">Vultr Agent Rush, challenge 1: Blast Radius Zero</div>
+</section>
+
+<section class="s">
+  <h2>Bug reports are cheap to write and costly to check</h2>
+  <ul class="points">
+    <li><b>The flood is real.</b> curl ended its bug bounty in January 2026 after a surge of AI-written reports that did not hold up.</li>
+    <li><b>Checking is manual.</b> Clone, install, write a test, then try the reported version and the current one.</li>
+    <li><b>Checking is risky.</b> A report's "steps to reproduce" are a stranger's code, usually run on a maintainer's own machine.</li>
+    <li><b>A coding agent makes it riskier</b> if it runs those steps with your keys and your network.</li>
+  </ul>
+  <div class="src">Source on curl: hackaday.com/2026/01/26/the-curl-project-drops-bug-bounties-due-to-ai-slop</div>
+  <div class="n">2</div>
+</section>
+
+<section class="s">
+  <h2>Paste an issue URL, get a verdict with the evidence</h2>
+  <div class="flow">
+    <div><b>1. Read</b>The issue text is treated as untrusted input.</div>
+    <div><b>2. Write</b>An agent on Vultr Serverless Inference writes <code>setup.sh</code> and <code>repro.sh</code> in a sandbox. <code>repro.sh</code> exits 1 when the bug happens.</div>
+    <div><b>3. Verify</b>The backend re-runs both scripts in fresh sandboxes, at the reported commit and on the default branch, twice each.</div>
+    <div><b>4. Report</b>Reproduced, fixed (with git bisect naming the commit), not reproducible, flaky or inconclusive.</div>
+  </div>
+  <div class="key">The verdict comes from exit codes, not from what the model says.</div>
+  <table style="margin-bottom:30px">
+    <tr><th>run</th><th>ref</th><th>commit</th><th>setup</th><th>repro exits</th><th>outcome</th></tr>
+    <tr><td>reported</td><td><code>v0.1.0</code></td><td><code>589eff8272dc</code></td><td>0</td><td>1, 1</td><td>present</td></tr>
+    <tr><td>default branch</td><td><code>main</code></td><td><code>bda2776623f4</code></td><td>0</td><td>0, 0</td><td>absent</td></tr>
+  </table>
+  <p class="muted" style="font-size:27px">Demo issue #1: git bisect then named <code>3ee5aeb</code> as the fix. The report lists every command with its exit code, duration and output hash, and every network request the sandboxes made.</p>
+  <div class="n">3</div>
+</section>
+
+<section class="s">
+  <h2>Containment is the product: every payload below ran live</h2>
+  <table>
+    <tr><th style="width:30%">Attack lab payload</th><th style="width:40%">What stopped it</th><th>Observed under gVisor</th></tr>
+    <tr><td><code>rm -rf /</code></td><td>Read-only root, scratch space on tmpfs</td><td>Deletions refused, 516 binaries before and after</td></tr>
+    <tr><td>Steal cloud credentials</td><td>Egress gate checks the address after DNS; no direct route</td><td>Gate refused, direct curl exit 7, attempt logged</td></tr>
+    <tr><td>Fork bomb</td><td>Limit of 256 processes, sandbox destroyed</td><td><code>fork: retry</code>, new processes refused</td></tr>
+    <tr><td>Exfiltrate data</td><td>Allowlist of hosts, ports 80 and 443 only</td><td>Refused by name, by raw IP and on port 22, each attempt logged</td></tr>
+    <tr><td>Memory bomb, secret hunt, break-out attempts</td><td>2 GB limit, no keys, no socket, non-root, no capabilities</td><td>Killed at the 2 GB limit; no keys found; mount, su and system writes refused</td></tr>
+  </table>
+  <p class="note">After each payload a second, fresh sandbox starts clean. Anyone can press these buttons on the live site, and no model is involved. One limit we show openly: a user namespace can be created inside gVisor, but its root counts only inside that namespace.</p>
+  <div class="n">4</div>
+</section>
+
+<section class="s">
+  <h2>Five real bug reports, same behaviour when checked outside Repro</h2>
+  <table>
+    <tr><th>Issue</th><th>Verdict</th><th>Upstream</th><th class="num">Time</th><th class="num">Tokens</th></tr>
+    <tr><td>humanize #57: <code>metric(0)</code> crashes</td><td><span class="tag ok">Fixed</span> bisect <code>b1ee687</code></td><td>closed, PR #47</td><td class="num">226 s</td><td class="num">68k</td></tr>
+    <tr><td>humanize #171: negative time gives "a day"</td><td><span class="tag ok">Fixed</span> bisect <code>b939b2e</code></td><td>closed, PR #173</td><td class="num">203 s</td><td class="num">81k</td></tr>
+    <tr><td>tabulate #354: <code>maxcolwidths</code> adds whitespace</td><td><span class="tag bug">Reproduced</span></td><td>open</td><td class="num">223 s</td><td class="num">327k</td></tr>
+    <tr><td>arrow #1294: <code>+03:00.34</code> accepted as a timezone</td><td><span class="tag bug">Reproduced</span></td><td>open</td><td class="num">137 s</td><td class="num">170k</td></tr>
+    <tr><td>parse #116: <code>{name:s}</code> does not match</td><td><span class="tag bug">Reproduced</span></td><td>open</td><td class="num">104 s</td><td class="num">121k</td></tr>
+  </table>
+  <p class="note">We chose these five, so this is a demonstration and not an accuracy benchmark. The first arrow run came back inconclusive after using all 40 tool calls; the agent now warns the model when five calls remain, and the second run submitted on call 39. Each result was repeated in a plain Python container with the published packages.</p>
+  <div class="n">5</div>
+</section>
+
+<section class="s">
+  <h2 style="margin-bottom:30px">Built on Vultr, with one way out of the sandbox</h2>
+  <div class="two">
+    <div class="arch">{{ARCH}}</div>
+    <ul class="svc">
+      <li><b>Cloud Compute</b>One VM runs Caddy, the FastAPI backend and job queue, the egress gate, and Docker with gVisor.</li>
+      <li><b>Serverless Inference</b>Every model call, through the OpenAI-compatible API. The key stays in the backend.</li>
+      <li><b>Vultr API and firewall</b><code>tools/vultr_vm.py</code> creates the VM, SSH key and firewall group, and deletes them again.</li>
+      <li><b>Each sandbox</b>Read-only root, non-root, no capabilities, 2 GB, 2 CPUs, 256 processes, time limit. Destroyed after its step.</li>
+    </ul>
+  </div>
+  <div class="n">6</div>
+</section>
+
+<section class="s">
+  <h2>Who it is for, and what a check costs</h2>
+  <ul class="points">
+    <li><b>Maintainers:</b> a verified reproduction, or a clear "could not reproduce", before anyone spends an afternoon.</li>
+    <li><b>Bug bounty and security triage:</b> run a submitted proof of concept with nothing to steal and nowhere to send it.</li>
+    <li><b>Teams adopting coding agents:</b> the same sandbox and egress design applies to other agent tasks that run untrusted code.</li>
+  </ul>
+  <div class="cost">
+    <div><b>104 to 226 s</b>per run on the five real issues</div>
+    <div><b>68k to 327k</b>tokens per run on glm-5.3</div>
+    <div><b>$0.066 per hour</b>for the VM (vhp-4c-8gb-amd, Frankfurt)</div>
+  </div>
+  <div class="n">7</div>
+</section>
+
+<section class="s dark" style="justify-content:center">
+  <div class="brand"><i></i>Repro</div>
+  <h1 style="margin:40px 0 0">Try to break it.</h1>
+  <div class="links"><span>Live</span>https://repro-209-250-235-249.sslip.io<br><span>Code</span>https://github.com/CVasilopoulos/repro (MIT)</div>
+  <div class="foot">AI-assisted, human-directed.</div>
+</section>
+
+</body>
+</html>

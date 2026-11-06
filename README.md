@@ -5,7 +5,8 @@
 Built for the Vultr Agent Rush hackathon, challenge 1 "Blast Radius Zero".
 
 - Live demo: https://repro-209-250-235-249.sslip.io
-- Video: _(link added at submission)_
+- Video: [docs/video/repro-demo.mp4](docs/video/repro-demo.mp4) (3:56, captions burned in and in [repro-demo.srt](docs/video/repro-demo.srt))
+- Slides: [docs/slides/repro-slides.pdf](docs/slides/repro-slides.pdf)
 
 ![Architecture](docs/architecture.svg)
 
@@ -62,7 +63,7 @@ The [demo repository](https://github.com/CVasilopoulos/repro-demo) has three gen
 
 In our runs with `glm-5.3`, the agent flagged #4, #5 and #6 as hostile and did not run them as written. It had also read the demo repository's README, which says some issues are deliberately hostile, so that is not a measure of how well a model spots attacks. Containment does not depend on the model noticing: the attack lab runs the same payloads with no model involved.
 
-The **attack lab** on the home page runs fixed hostile payloads without a model: rm -rf /, fork bomb, memory bomb, credential theft, exfiltration, secret hunting and escape attempts. Each one is followed by a fresh sandbox, to show the next task starts clean. Judges can press the buttons themselves.
+The **attack lab** on the home page runs fixed hostile payloads without a model: rm -rf /, fork bomb, memory bomb, credential theft, exfiltration, secret hunting and escape attempts. Each one is followed by a fresh sandbox, to show the next task starts clean. Judges can press the buttons themselves. The escape preset also shows one thing that is not refused: a user namespace can be created inside gVisor, but its root counts only inside that namespace: it still cannot write to the system or read `/etc/shadow`, and any mount it makes stays in its own namespace.
 
 ## Real issues
 

@@ -6,6 +6,7 @@ const el = (tag, cls, text) => {
   return n;
 };
 const fmtTime = (t) => new Date(t * 1000).toLocaleTimeString();
+const cleanText = (s) => (s || "").replace(/\u00e2\u0080[\u0090-\u009f]/g, "-");
 const VERDICT_LABEL = {
   reproduced: "Reproduced on the default branch",
   fixed: "Fixed on the default branch",
@@ -160,7 +161,7 @@ function render(e) {
       break;
     }
     case "thought":
-      addStep("", [t, "agent"], el("div", "thought", d.text));
+      addStep("", [t, "agent"], el("div", "thought", cleanText(d.text)));
       break;
     case "exec_start": {
       const li = addStep("", [t, d.sandbox.split("-").slice(2, -1).join("-") || "sandbox", d.label || "command", pill("running")], el("div", "cmd", "$ " + d.command));
@@ -209,8 +210,8 @@ function render(e) {
       break;
     }
     case "agent_finished":
-      state.notes = d.notes || "";
-      addStep("", [t, "agent", d.outcome], el("div", "", d.claim ? `Claim: ${d.claim}` : d.reason || ""), d.notes ? el("div", "muted", d.notes) : "", el("div", "muted", `${d.tool_calls} tool calls, ${d.prompt_tokens + d.completion_tokens} tokens`));
+      state.notes = cleanText(d.notes);
+      addStep("", [t, "agent", d.outcome], el("div", "", d.claim ? `Claim: ${d.claim}` : d.reason || ""), d.notes ? el("div", "muted", cleanText(d.notes)) : "", el("div", "muted", `${d.tool_calls} tool calls, ${d.prompt_tokens + d.completion_tokens} tokens`));
       break;
     case "verify_result":
       addStep(d.outcome === "error" ? "fail-step" : "ok-step", [t, pill("verify " + d.role), d.ref], el("div", "", `commit ${d.commit ? d.commit.slice(0, 12) : "?"}, setup exit ${d.setup_exit}, repro exits ${d.repro_exits.join(", ") || "none"}: ${d.outcome}${d.lost ? " (" + d.lost + ")" : ""}`));

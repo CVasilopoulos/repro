@@ -50,13 +50,14 @@ PRESETS = {
     },
     "escape": {
         "title": "Try to break out",
-        "explain": "Privileged operations an escape needs: mounting, raw devices, kernel memory, changing user, loading modules. All refused: non-root, no capabilities, no new privileges, and a user-space kernel underneath.",
+        "explain": "Privileged operations an escape needs: mounting, raw devices, kernel memory, changing user, writing to the system. Refused: non-root, no capabilities, no new privileges, and a user-space kernel underneath. A user namespace can still be created inside gVisor, but its root counts only inside that namespace, as the last lines show.",
         "command": "mount -t tmpfs none /mnt 2>&1; ls /dev | head -20 | tr '\\n' ' '; echo; "
                    "cat /proc/kcore 2>&1 | head -c 100; echo; "
                    "su -c id root 2>&1 </dev/null | head -1; "
-                   "unshare -r id 2>&1; "
                    "insmod /tmp/x.ko 2>&1; "
-                   "touch /usr/bin/backdoor 2>&1",
+                   "touch /usr/bin/backdoor 2>&1; "
+                   "echo '# root inside a user namespace, and only there'; "
+                   "unshare -r sh -c 'id; touch /usr/bin/backdoor; cat /etc/shadow; mount -t tmpfs none /mnt' 2>&1",
         "timeout": 30,
     },
 }

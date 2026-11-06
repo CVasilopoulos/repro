@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Repro cover</title>
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; }
+body { background: #101317; color: #eef0f3; font-family: Inter, Arial, sans-serif; display: grid; grid-template-columns: 1fr 790px; gap: 70px; align-items: center; padding: 0 100px; }
+.brand { display: flex; align-items: center; gap: 16px; font-size: 40px; font-weight: 600; }
+.brand i { width: 28px; height: 28px; border-radius: 7px; background: #2f7fe6; display: inline-block; }
+h1 { font-size: 92px; line-height: 1.06; font-weight: 700; letter-spacing: -1.4px; margin: 42px 0 32px; }
+p { font-size: 35px; line-height: 1.38; color: #a9afb9; margin: 0; }
+.stack { display: flex; flex-direction: column; gap: 24px; }
+.panel { background: #fff; color: #15181d; border-radius: 16px; padding: 32px 36px; }
+.panel.fixed { border: 3px solid #1f7a4d; background: #e5f4ec; }
+.panel.lab { border: 3px solid #b3261e; background: #fbe9e7; }
+.panel h3 { margin: 0 0 16px; font-size: 36px; font-weight: 700; }
+table { border-collapse: collapse; font-size: 25px; width: 100%; }
+th { text-align: left; font-size: 20px; font-weight: 650; color: #49504a; padding: 0 14px 8px 0; }
+td { padding: 6px 14px 6px 0; font-variant-numeric: tabular-nums; }
+.mono { font-family: 'DejaVu Sans Mono', Menlo, monospace; font-size: 23px; line-height: 1.5; }
+.small { font-size: 24px; color: #2c3a31; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div>
+  <div class="brand"><i></i>Repro</div>
+  <h1>Is this bug report real?</h1>
+  <p>An agent writes the reproduction. Throwaway gVisor sandboxes on Vultr run it. Exit codes decide.</p>
+</div>
+<div class="stack">
+  <div class="panel fixed">
+    <h3>Fixed on the default branch</h3>
+    <table>
+      <tr><th>run</th><th>ref</th><th>repro exits</th><th>outcome</th></tr>
+      <tr><td>reported</td><td>v0.1.0</td><td>1, 1</td><td>present</td></tr>
+      <tr><td>default</td><td>main</td><td>0, 0</td><td>absent</td></tr>
+    </table>
+    <div class="small">git bisect: fixed by 3ee5aeb</div>
+  </div>
+  <div class="panel lab">
+    <h3>Contained</h3>
+    <div class="mono">rm -rf /: 22 deletions refused<br>after: 516 binaries still there<br>next sandbox: clean</div>
+  </div>
+</div>
+</body>
+</html>

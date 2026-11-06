@@ -1,0 +1,120 @@
+1
+00:00:01,100 --> 00:00:07,585
+In January, curl shut down its bug bounty after a flood of AI-written reports that did not hold up.
+
+2
+00:00:07,686 --> 00:00:12,151
+Checking a report means running a stranger's steps on your own machine.
+
+3
+00:00:12,251 --> 00:00:16,565
+Repro does that check for you, in throwaway sandboxes on Vultr.
+
+4
+00:00:17,273 --> 00:00:23,327
+Paste a GitHub issue. This is a live run on the public site, on an issue from our demo repository.
+
+5
+00:00:24,838 --> 00:00:33,366
+An agent on Vultr Serverless Inference reads the issue as untrusted input and works inside a fresh gVisor sandbox.
+
+6
+00:00:33,911 --> 00:00:42,310
+It clones the reported version and writes two scripts: one installs the project, one exits 1 when the bug happens.
+
+7
+00:00:52,875 --> 00:01:01,403
+Then the backend runs both scripts itself in new sandboxes, at the reported version and on the default branch, twice each.
+
+8
+00:01:01,504 --> 00:01:05,876
+The verdict comes from those exit codes, not from what the model says.
+
+9
+00:01:05,976 --> 00:01:14,016
+Here the bug is on version 0.1.0 and gone on main, so git bisect names the commit that fixed it.
+
+10
+00:01:14,117 --> 00:01:22,784
+Every command is logged with its exit code and output hash, every connection is listed, and each sandbox is destroyed after its step.
+
+11
+00:01:23,973 --> 00:01:31,850
+What if the steps are hostile? The attack lab runs real payloads with no model involved, so nothing depends on a model noticing.
+
+12
+00:01:31,950 --> 00:01:36,589
+First, rm -rf / inside the sandbox.
+
+13
+00:01:36,691 --> 00:01:44,289
+The root is read-only, so the deletions are refused and the binary count does not change. Only scratch files are gone.
+
+14
+00:01:44,389 --> 00:01:49,179
+A fresh sandbox then starts clean, which is what the next task would get.
+
+15
+00:01:49,977 --> 00:01:55,950
+Next, a grab for cloud credentials at the metadata address, through the proxy and directly.
+
+16
+00:01:56,051 --> 00:02:03,614
+The gate refuses it, the direct route does not exist, and the attempt is logged. There are no keys in the sandbox anyway.
+
+17
+00:02:04,418 --> 00:02:10,890
+And a fork bomb. The process limit refuses new processes, and the sandbox is destroyed afterwards.
+
+18
+00:02:17,678 --> 00:02:25,544
+In a real run on our fork bomb issue, the model called the script suspicious and ran only a bounded test, which hit the same limit.
+
+19
+00:02:25,645 --> 00:02:34,299
+Our demo README warns about hostile issues, so this is no measure of how well models spot attacks. Containment does not rely on it.
+
+20
+00:02:35,441 --> 00:02:39,836
+We also ran five real bug reports from public projects.
+
+21
+00:02:39,937 --> 00:02:48,696
+Two are already fixed, and bisect named commits from the pull requests that fixed them. This one points at pull request 173.
+
+22
+00:02:49,382 --> 00:02:54,392
+The other three still reproduce on the default branch, and those issues are still open.
+
+23
+00:02:54,493 --> 00:03:01,349
+Arrow took two runs: the first ran out of tool calls, and Repro said inconclusive rather than guess.
+
+24
+00:03:01,452 --> 00:03:09,817
+Each result was checked again outside Repro. We picked these five ourselves, so this is a demonstration, not a benchmark.
+
+25
+00:03:09,920 --> 00:03:17,380
+One Vultr Cloud Compute VM runs the backend, Docker with gVisor, the egress gate and Caddy.
+
+26
+00:03:17,480 --> 00:03:23,129
+Every model call goes to Vultr Serverless Inference, and the key never enters a sandbox.
+
+27
+00:03:23,229 --> 00:03:33,010
+Sandboxes have a read-only root, no capabilities and hard limits. Their only way out is a gate that allows GitHub and package registries.
+
+28
+00:03:33,114 --> 00:03:40,458
+It is for maintainers, bug bounty teams and security teams, to check a report before a person spends time on it.
+
+29
+00:03:40,559 --> 00:03:46,532
+On these five issues, a run took under four minutes and under 330 thousand tokens.
+
+30
+00:03:46,635 --> 00:03:53,548
+It is live now, the attack lab is open, and the code is MIT licensed. Try to break it.
+
